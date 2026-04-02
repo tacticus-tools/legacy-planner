@@ -1,10 +1,13 @@
+import { convexQuery } from '@convex-dev/react-query';
+import { useQuery } from '@tanstack/react-query';
 /* eslint-disable import-x/no-internal-modules */
 import { JSX, useContext } from 'react';
 import { isMobile } from 'react-device-detect';
 
+import { api } from '@/convex-api';
 import { DispatchContext, StoreContext } from '@/reducers/store.provider';
 
-import { Alliance, Rarity, RarityMapper, useAuth } from '@/fsd/5-shared/model';
+import { Alliance, Rarity, RarityMapper } from '@/fsd/5-shared/model';
 import { BadgeImage } from '@/fsd/5-shared/ui/icons/badge-image';
 import { OrbIcon } from '@/fsd/5-shared/ui/icons/icon-list';
 import { MiscIcon } from '@/fsd/5-shared/ui/icons/misc.icon';
@@ -15,7 +18,7 @@ import { XpUseState } from './models';
 export const Resources = () => {
     const { inventory, xpUse } = useContext(StoreContext);
     const dispatch = useContext(DispatchContext);
-    const { userInfo } = useAuth();
+    const query = useQuery(convexQuery(api.legacy_data.getLegacyData));
 
     const dispatchUpdate = (newState: XpUseState) => {
         dispatch.xpUse({
@@ -61,7 +64,7 @@ export const Resources = () => {
         Rarity.Mythic,
     ];
 
-    const hasSync = !!userInfo.tacticusApiKey;
+    const hasSync = !!query.data?.tacticusApiKey;
 
     const renderResourceItem = (
         key: string,

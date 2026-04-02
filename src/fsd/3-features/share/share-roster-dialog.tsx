@@ -1,15 +1,18 @@
-﻿import AddIcon from '@mui/icons-material/Add';
+﻿import { convexQuery } from '@convex-dev/react-query';
+import AddIcon from '@mui/icons-material/Add';
 import CancelIcon from '@mui/icons-material/Cancel';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
+import { useQuery } from '@tanstack/react-query';
 import { enqueueSnackbar } from 'notistack';
 import React from 'react';
 import { isMobile } from 'react-device-detect';
 
-import { useAuth } from '@/fsd/5-shared/model';
+import { api } from '@/convex-api';
+
 import { LoaderWithText } from '@/fsd/5-shared/ui';
 
 import { createShareToken, refreshShareToken, removeShareToken } from './share-roster.endpoints';
@@ -17,10 +20,11 @@ import { createShareToken, refreshShareToken, removeShareToken } from './share-r
 export const ShareRosterDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
     const [loading, setLoading] = React.useState(false);
 
-    const { shareToken, username, setUser } = useAuth();
+    const query = useQuery(convexQuery(api.legacy_data.getLegacyData));
 
-    const shareRoute = (isMobile ? '/mobile' : '') + `/sharedRoster?username=${username}&shareToken=${shareToken}`;
-    const shareLink = shareToken ? location.origin + shareRoute : undefined;
+    const shareRoute =
+        (isMobile ? '/mobile' : '') + `/sharedRoster?username=${username}&shareToken=${query.data?.shareToken}`;
+    const shareLink = query.data?.shareToken ? location.origin + shareRoute : undefined;
 
     const copyLink = () => {
         if (shareLink) {
@@ -74,7 +78,7 @@ export const ShareRosterDialog = ({ isOpen, onClose }: { isOpen: boolean; onClos
                 {shareLink ? (
                     <>
                         <span>Your share token:</span>{' '}
-                        <TextField disabled={true} value={shareToken} fullWidth></TextField>
+                        <TextField disabled={true} value={query.data?.shareToken} fullWidth></TextField>
                         <span>Your share link:</span>{' '}
                         <TextField disabled={true} value={shareLink} fullWidth></TextField>{' '}
                         <div className="mt-[5px]">

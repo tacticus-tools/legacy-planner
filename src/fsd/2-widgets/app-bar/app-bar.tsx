@@ -45,6 +45,7 @@ import { ThemeSwitch } from '@/fsd/3-features/theme-switch';
 import { WhatsNewDialog } from 'src/fsd/3-features/whats-new';
 
 import { AppBarSubMenu } from './app-bar-sub-menu';
+import { UserMenu } from '@/shared-components/user-menu/user-menu';
 
 interface Props {
     headerTitle: string;

@@ -1,4 +1,5 @@
-﻿import {
+﻿import { convexQuery } from '@convex-dev/react-query';
+import {
     Delete as DeleteIcon,
     ExpandMore as ExpandMoreIcon,
     GridView as GridViewIcon,
@@ -8,11 +9,13 @@
 import SettingsIcon from '@mui/icons-material/Settings';
 import { Accordion, AccordionDetails, AccordionSummary, FormControlLabel, Switch } from '@mui/material';
 import Button from '@mui/material/Button';
+import { useQuery } from '@tanstack/react-query';
 import { cloneDeep, sum } from 'lodash';
 import { useCallback, useContext, useMemo, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { Link } from 'react-router-dom';
 
+import { api } from '@/convex-api';
 import { IDailyRaidsFarmOrder } from '@/models/interfaces';
 import { GoalsEstimateFunction } from '@/services/goals-estimate-service';
 import DailyRaidsSettings from '@/shared-components/daily-raids-settings';
@@ -24,7 +27,7 @@ import { EditGoalDialog } from 'src/shared-components/goals/edit-goal-dialog';
 import { SetGoalDialog } from 'src/shared-components/goals/set-goal-dialog';
 
 import { numberToThousandsString } from '@/fsd/5-shared/lib/number-to-thousands-string';
-import { Alliance, Rarity, useAuth } from '@/fsd/5-shared/model';
+import { Alliance, Rarity } from '@/fsd/5-shared/model';
 import { MiscIcon } from '@/fsd/5-shared/ui/icons';
 import { ForgeBadgesTotal, MoWComponentsTotal, XpBooksTotal } from '@/fsd/5-shared/ui/icons/icon-list';
 import { SyncButton } from '@/fsd/5-shared/ui/sync-button';
@@ -78,7 +81,7 @@ export const Goals = () => {
         xpUse,
     } = useContext(StoreContext);
     const dispatch = useContext(DispatchContext);
-    const { userInfo } = useAuth();
+    const query = useQuery(convexQuery(api.legacy_data.getLegacyData));
 
     const characters = useMemo(
         () => CharactersService.resolveStoredCharacters(unresolvedCharacters),
@@ -301,7 +304,7 @@ export const Goals = () => {
     const totalGoldAbilities =
         sum(mergedGoalEstimates.map(estimate => estimate.abilitiesEstimate?.gold ?? 0)) +
         sum(mergedGoalEstimates.map(estimate => estimate.xpEstimateAbilities?.gold ?? 0));
-    const hasSync = !!userInfo.tacticusApiKey;
+    const hasSync = !!query.data?.tacticusApiKey;
 
     const onDeleteAll = () => {
         if (

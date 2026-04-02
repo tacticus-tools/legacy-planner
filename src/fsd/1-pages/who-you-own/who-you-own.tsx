@@ -1,14 +1,18 @@
-﻿/* eslint-disable boundaries/element-types */
+﻿import { useAuth } from '@clerk/clerk-react';
+import { convexQuery } from '@convex-dev/react-query';
+/* eslint-disable boundaries/element-types */
 /* eslint-disable import-x/no-internal-modules */
 import Box from '@mui/material/Box';
+import { useQuery } from '@tanstack/react-query';
 import { sum } from 'lodash';
 import { useCallback, useContext, useMemo, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+import { api } from '@/convex-api';
 import { DispatchContext, StoreContext } from 'src/reducers/store.provider';
 
-import { useAuth, UnitType } from '@/fsd/5-shared/model';
+import { UnitType } from '@/fsd/5-shared/model';
 
 import { ICharacter2 } from '@/fsd/4-entities/character';
 import { CharactersService as FsdCharactersService } from '@/fsd/4-entities/character/characters.service';
@@ -40,7 +44,8 @@ export const WhoYouOwn = () => {
     const dispatch = useContext(DispatchContext);
     const navigate = useNavigate();
 
-    const { token: isLoggedIn, shareToken: isRosterShared } = useAuth();
+    const { isSignedIn } = useAuth();
+    const query = useQuery(convexQuery(api.legacy_data.getLegacyData));
 
     const [viewControls, setViewControls] = useState<ICharactersViewControls>({
         filterBy: viewPreferences.wyoFilter,
@@ -148,7 +153,7 @@ export const WhoYouOwn = () => {
             <RosterSnapshotsAssetsProvider>
                 <CharactersViewContext.Provider value={viewPreferences}>
                     <RosterHeader totalValue={totalValue} totalPower={totalPower} filterChanges={setNameFilter}>
-                        {!!isLoggedIn && <ShareRoster isRosterShared={!!isRosterShared} />}
+                        {!!isSignedIn && <ShareRoster isRosterShared={!!query.data?.shareToken} />}
                         <TeamGraph units={charactersFiltered} />
                     </RosterHeader>
                     <CharactersViewControls viewControls={viewControls} viewControlsChanges={updatePreferences} />

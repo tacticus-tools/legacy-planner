@@ -1,19 +1,21 @@
 ﻿import { useUser } from '@clerk/clerk-react';
+import { convexQuery } from '@convex-dev/react-query';
 import AddIcon from '@mui/icons-material/Add';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
 import { Badge, Fab, Tab, Tabs } from '@mui/material';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
+import { useQuery } from '@tanstack/react-query';
 import { enqueueSnackbar } from 'notistack';
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 
+import { api } from '@/convex-api';
 // eslint-disable-next-line import-x/no-internal-modules -- FYI: Ported from `v2` module; doesn't comply with `fsd` structure
 import { StoreContext } from 'src/reducers/store.provider';
 
 import { useQueryState } from '@/fsd/5-shared/lib';
-import { useAuth, UserRole } from '@/fsd/5-shared/model';
 import { LoaderWithText } from '@/fsd/5-shared/ui';
 import { SearchParametersStateContext } from '@/fsd/5-shared/ui/contexts';
 
@@ -61,13 +63,13 @@ const handleViewOriginal = (teamId: number | undefined) => {
 
 export const Guides: React.FC = () => {
     const { characters, mows } = useContext(StoreContext);
-    const { userInfo } = useAuth();
+    const query = useQuery(convexQuery(api.legacy_data.getLegacyData));
     const { isSignedIn } = useUser();
     const [_, setSearchParameters] = useContext(SearchParametersStateContext);
 
     const resolvedMows = useMemo(() => MowsService.resolveAllFromStorage(mows), [mows]);
 
-    const isModerator = [UserRole.admin, UserRole.moderator].includes(userInfo.role);
+    const isModerator = ['admin', 'moderator'].includes(query.data?.role ?? '');
     const [openCreateTeamDialog, setOpenCreateTeamDialog] = React.useState(false);
     const [showFilters, setShowFilters] = React.useState(false);
 

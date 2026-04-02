@@ -1,14 +1,13 @@
+import { convexQuery, useConvexMutation } from '@convex-dev/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { enqueueSnackbar } from 'notistack';
 import React, { useState } from 'react';
 
+import { api } from '@/convex-api';
 // eslint-disable-next-line import-x/no-internal-modules -- FYI: Ported from `v2` module; doesn't comply with `fsd` structure
 import { DialogProps } from '@/models/dialog.props';
 
-// eslint-disable-next-line import-x/no-internal-modules -- FYI: Ported from `v2` module; doesn't comply with `fsd` structure
-import { updateTacticusApiKey } from '@/fsd/5-shared/lib/tacticus-api';
-import { useAuth } from '@/fsd/5-shared/model';
 import { Button } from '@/fsd/5-shared/ui/button';
-import { useLoader } from '@/fsd/5-shared/ui/contexts';
 import { TextField } from '@/fsd/5-shared/ui/input';
 import { Modal } from '@/fsd/5-shared/ui/modal';
 
@@ -33,53 +32,36 @@ export const TacticusIntegrationDialog: React.FC<Props> = ({
     tacticusUserId,
     tacticusGuildApiKey,
 }) => {
-    const loader = useLoader();
-    const auth = useAuth();
     const { syncWithTacticus } = useSyncWithTacticus();
 
     const [apiKey, setApiKey] = useState<string>(tacticusApiKey);
-    const [currentApiKey, setCurrentApiKey] = useState<string>(tacticusApiKey);
     const [guildApiKey, setGuildApiKey] = useState<string>(tacticusGuildApiKey);
-    const [currentGuildApiKey, setCurrentGuildApiKey] = useState<string>(tacticusGuildApiKey);
     const [userId, setUserId] = useState<string>(tacticusUserId);
-    const [currentUserId, setCurrentUserId] = useState<string>(tacticusUserId);
 
     async function syncWithTacticusApi() {
         onClose();
         await syncWithTacticus();
     }
-
-    async function updateApiKey() {
-        loader.startLoading('Updating settings. Please wait...');
-        try {
-            const response = await updateTacticusApiKey(apiKey, guildApiKey, userId);
-
-            if (!response.data) {
-                enqueueSnackbar(buildErrorMessage(response.error), { variant: 'error' });
-                return;
-            }
-
-            auth.setUserInfo({
-                ...auth.userInfo,
-                tacticusApiKey: apiKey,
-                tacticusGuildApiKey: guildApiKey,
-                tacticusUserId: userId,
-            });
-            setCurrentApiKey(apiKey);
-            setCurrentGuildApiKey(guildApiKey);
-            setCurrentUserId(userId);
-
-            enqueueSnackbar('Settings updated', { variant: 'success' });
-        } catch (error) {
+    const query = useQuery(convexQuery(api.legacy_data.getLegacyData));
+    const upsertSettingsMutation = useMutation({
+        mutationFn: useConvexMutation(api.legacy_data.upsertLegacyData),
+        onError: error => {
             console.error(error);
-            const parsedError =
-                typeof error === 'string' || error instanceof Error || error === undefined ? error : String(error);
-            enqueueSnackbar(buildErrorMessage(parsedError), { variant: 'error' });
-        } finally {
-            loader.endLoading();
-        }
-    }
+            enqueueSnackbar(buildErrorMessage(error.message), { variant: 'error' });
+        },
+    });
 
+    const upsertSettingFunction = () => {
+        if (!query.data) throw new Error('must load settings first');
+        upsertSettingsMutation.mutate({
+            ...query.data,
+            tacticusApiKey: apiKey,
+            tacticusGuildApiKey: guildApiKey,
+            tacticusUserId: userId,
+        });
+    };
+    if (query.isPending) return 'Loading...';
+    if (query.isError) return `Error Loading Data: ${query.error.message}`;
     return (
         <Modal
             isOpen={isOpen}
@@ -160,11 +142,11 @@ export const TacticusIntegrationDialog: React.FC<Props> = ({
                         <Button
                             intent="primary"
                             isDisabled={
-                                apiKey === currentApiKey &&
-                                guildApiKey === currentGuildApiKey &&
-                                userId === currentUserId
+                                apiKey === query.data.tacticusApiKey &&
+                                guildApiKey === query.data.tacticusGuildApiKey &&
+                                userId === query.data.tacticusUserId
                             }
-                            onPress={updateApiKey}>
+                            onPress={upsertSettingFunction}>
                             Update
                         </Button>
                     </div>
@@ -174,7 +156,7 @@ export const TacticusIntegrationDialog: React.FC<Props> = ({
                     <Button intent="secondary" onPress={onClose}>
                         Cancel
                     </Button>
-                    <Button intent="primary" onPress={syncWithTacticusApi} isDisabled={!currentApiKey}>
+                    <Button intent="primary" onPress={syncWithTacticusApi} isDisabled={!query.data.tacticusApiKey}>
                         Sync
                     </Button>
                 </Modal.Footer>

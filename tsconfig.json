@@ -21,8 +21,8 @@
         "importJsonAsConst": true,
         "paths": {
             "@/*": ["./src/*"],
-            "src/*": ["./src/*"]
-        }
+            "src/*": ["./src/*"],
+        },
     },
-    "include": ["src"]
+    "include": ["src"],
 }

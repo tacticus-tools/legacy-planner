@@ -1,17 +1,19 @@
-﻿/* eslint-disable import-x/no-internal-modules */
+﻿import { convexQuery } from '@convex-dev/react-query';
+/* eslint-disable import-x/no-internal-modules */
 /* eslint-disable boundaries/element-types */
 import { Card, CardContent, CardHeader } from '@mui/material';
+import { useQuery } from '@tanstack/react-query';
 import { sum } from 'lodash';
 import { useContext } from 'react';
 import { isMobile } from 'react-device-detect';
 import Zoom from 'react-medium-image-zoom';
 import { useNavigate } from 'react-router-dom';
 
+import { api } from '@/convex-api';
 import { PersonalGoalType } from 'src/models/enums';
 import { menuItemById } from 'src/models/menu-items';
 import { StoreContext } from 'src/reducers/store.provider';
 
-import { useAuth } from '@/fsd/5-shared/model';
 import { getImageUrl } from '@/fsd/5-shared/ui';
 import { MiscIcon, UnitShardIcon } from '@/fsd/5-shared/ui/icons';
 
@@ -86,7 +88,7 @@ function LreSection({ nextEvent }: { nextEvent: ILegendaryEventStatic }) {
 export const DesktopHome = () => {
     useBmcWidget();
     const navigate = useNavigate();
-    const { userInfo } = useAuth();
+    const query = useQuery(convexQuery(api.legacy_data.getLegacyData));
     const { goals, dailyRaids } = useContext(StoreContext);
     const nextLeMenuItem = LegendaryEventService.getActiveEvent();
 
@@ -103,7 +105,7 @@ export const DesktopHome = () => {
     const upgradeRankGoals = goals.filter(x => x.type === PersonalGoalType.UpgradeRank).length;
 
     const announcements = () => {
-        if (userInfo.tacticusApiKey) {
+        if (query.data?.tacticusApiKey) {
             return <></>;
         }
 
