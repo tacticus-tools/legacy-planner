@@ -1,4 +1,5 @@
-﻿import { AxiosError } from 'axios';
+﻿import { useUser } from '@clerk/clerk-react';
+import { AxiosError } from 'axios';
 import { isEqual } from 'lodash';
 import { enqueueSnackbar } from 'notistack';
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
@@ -13,7 +14,6 @@ import { warDefense2Reducer } from 'src/reducers/war-defense2.reducer';
 import { warOffense2Reducer } from 'src/reducers/war-offense2.reducer';
 
 import { IErrorResponse } from '@/fsd/5-shared/api';
-import { useAuth } from '@/fsd/5-shared/model';
 
 import { GlobalState } from '../models/global-state';
 import { IDispatchContext, IGlobalState, IPersonalData2 } from '../models/interfaces';
@@ -45,7 +45,7 @@ function getLocalVersion(): number {
 }
 
 export const StoreProvider = ({ children }: React.PropsWithChildren) => {
-    const { isAuthenticated, setUser, setUserInfo, logout } = useAuth();
+    const { isSignedIn } = useUser();
     const localStore = useMemo(() => new PersonalDataLocalStorage(), []);
 
     // Track local-only version for in-memory/localStorage state
@@ -155,9 +155,9 @@ export const StoreProvider = ({ children }: React.PropsWithChildren) => {
                     }
 
                     if (error.response?.status === 401) {
-                        logout();
                         queuedStoreValueReference.current = undefined;
                         enqueueSnackbar('Session expired. Please re-login.', { variant: 'error' });
+                        throw new Error('Session expired. Please re-login.');
                     } else if (error.response?.status === 409) {
                         queuedStoreValueReference.current = undefined;
                         enqueueSnackbar(
@@ -187,7 +187,7 @@ export const StoreProvider = ({ children }: React.PropsWithChildren) => {
                     }
                 });
         },
-        [logout, setModifiedDateTicks, syncModifiedDateTicksFromServer]
+        [isSignedIn, setModifiedDateTicks, syncModifiedDateTicksFromServer]
     );
 
     function wrapDispatch<T>(dispatch: React.Dispatch<T>): React.Dispatch<T> {
@@ -332,7 +332,7 @@ export const StoreProvider = ({ children }: React.PropsWithChildren) => {
         setGlobalState({ ...newValue, __localVersion: nextVersion });
         localStore.setData(storeValue);
         setModified(false);
-        if (isAuthenticated) {
+        if (isSignedIn) {
             clearTimeout(saveTimeoutReference.current);
             saveTimeoutReference.current = setTimeout(() => {
                 pushDataToServer(storeValue, 'success');
@@ -349,7 +349,7 @@ export const StoreProvider = ({ children }: React.PropsWithChildren) => {
         guild,
         guildWar,
         inventory,
-        isAuthenticated,
+        isSignedIn,
         leProgress,
         leSelectedTeams,
         leSettings,
@@ -395,7 +395,7 @@ export const StoreProvider = ({ children }: React.PropsWithChildren) => {
     }
 
     useEffect(() => {
-        if (!isAuthenticated) {
+        if (!isSignedIn) {
             doDailyRefresh(dailyRaids.lastRefreshDateUTC);
             return;
         }
@@ -407,35 +407,11 @@ export const StoreProvider = ({ children }: React.PropsWithChildren) => {
                     return;
                 }
 
-                const {
-                    data,
-                    username,
-                    lastModifiedDate,
-                    shareToken,
-                    role,
-                    id,
-                    modifiedDateTicks: serverModifiedDateTicks,
-                    pendingTeamsCount,
-                    rejectedTeamsCount,
-                    tacticusApiKey,
-                    tacticusGuildApiKey,
-                    tacticusUserId,
-                } = response.data;
+                const { data, lastModifiedDate, modifiedDateTicks: serverModifiedDateTicks } = response.data;
                 const serverLastModified = new Date(lastModifiedDate);
                 const isFirstLogin = !data;
                 const modifiedDate = modifiedDateReference.current;
                 const isFreshData = !modifiedDate;
-                setUser(username, shareToken);
-                setUserInfo({
-                    role,
-                    username,
-                    userId: id,
-                    pendingTeamsCount,
-                    rejectedTeamsCount,
-                    tacticusApiKey,
-                    tacticusGuildApiKey,
-                    tacticusUserId,
-                });
                 const localModifiedDateTicks = modifiedDateTicksReference.current;
 
                 const hasDataConflict = localModifiedDateTicks !== serverModifiedDateTicks;
@@ -488,23 +464,14 @@ export const StoreProvider = ({ children }: React.PropsWithChildren) => {
             })
             .catch((error: AxiosError<IErrorResponse>) => {
                 if (error.response?.status === 401) {
-                    logout();
                     enqueueSnackbar('Session expired. Please re-login.', { variant: 'error' });
+                    throw new Error('Session expired. Please re-login.');
                 } else {
                     console.error(error);
                     enqueueSnackbar('Failed to fetch data from server. Try again later', { variant: 'error' });
                 }
             });
-    }, [
-        dailyRaids.lastRefreshDateUTC,
-        isAuthenticated,
-        localStore,
-        logout,
-        pushDataToServer,
-        setModifiedDateTicks,
-        setUser,
-        setUserInfo,
-    ]);
+    }, [dailyRaids.lastRefreshDateUTC, isSignedIn, localStore, pushDataToServer, setModifiedDateTicks]);
 
     useEffect(() => {
         const sixtySeconds = 1000 * 60;

@@ -8,6 +8,7 @@ const config: KnipConfig = {
     entry: ['src/fsd/0-app/index.tsx'],
     project: ['src/**/*.{js,ts,jsx,tsx,css}'],
     ignoreDependencies: ['svgo', 'sharp'], // see https://github.com/FatehAK/vite-plugin-image-optimizer#installation
+    ignore: ['src/convex/convex-api.ts'],
 };
 
 export default config;

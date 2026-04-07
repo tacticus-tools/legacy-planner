@@ -8,7 +8,7 @@ import { Link, useNavigate } from 'react-router-dom';
 // eslint-disable-next-line import-x/no-internal-modules
 import { DispatchContext, StoreContext } from '@/reducers/store.provider';
 // eslint-disable-next-line import-x/no-internal-modules
-import { UserMenu } from '@/shared-components/user-menu/user-menu';
+import { UserMenu } from '@/shared-components/user-menu';
 // eslint-disable-next-line import-x/no-internal-modules
 import { menuItemById } from 'src/models/menu-items';
 

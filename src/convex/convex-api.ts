@@ -19,7 +19,6 @@ export type PublicApiType = {
             'public',
             Record<string, never>,
             {
-                clerkUserId: string;
                 pendingTeamsCount: number;
                 rejectedTeamsCount: number;
                 role: 'user' | 'moderator' | 'admin';
@@ -27,22 +26,18 @@ export type PublicApiType = {
                 tacticusApiKey?: string;
                 tacticusGuildApiKey?: string;
                 tacticusUserId?: string;
-                username?: string;
             }
         >;
         upsertLegacyData: FunctionReference<
             'mutation',
             'public',
             {
-                clerkUserId: string;
                 pendingTeamsCount?: number;
                 rejectedTeamsCount?: number;
-                role?: 'user' | 'moderator' | 'admin';
                 shareToken?: string;
                 tacticusApiKey?: string;
                 tacticusGuildApiKey?: string;
                 tacticusUserId?: string;
-                username?: string;
             },
             any
         >;

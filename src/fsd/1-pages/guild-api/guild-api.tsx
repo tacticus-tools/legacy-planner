@@ -1,9 +1,10 @@
-﻿import React, { useContext } from 'react';
+﻿import { useUser } from '@clerk/clerk-react';
+import React, { useContext } from 'react';
 
 // eslint-disable-next-line import-x/no-internal-modules -- FYI: Ported from `v2` module; doesn't comply with `fsd` structure
+import { useConvexUserDataQuery } from '@/convex/hooks';
+// eslint-disable-next-line import-x/no-internal-modules -- FYI: Ported from `v2` module; doesn't comply with `fsd` structure
 import { StoreContext } from '@/reducers/store.provider';
-
-import { useAuth } from '@/fsd/5-shared/model';
 
 // eslint-disable-next-line import-x/no-internal-modules -- FYI: Ported from `v2` module; doesn't comply with `fsd` structure
 import { TacticusGuildVisualization } from '@/fsd/3-features/tacticus-integration/guild-overview';
@@ -14,13 +15,21 @@ import { mapUserIdToName } from '@/fsd/3-features/tacticus-integration/user-id-m
 
 export const GuildApi: React.FC = () => {
     const { guild } = useContext(StoreContext);
-    const { userInfo } = useAuth();
     const guildMembers = [...guild.members];
 
-    if (!guildMembers.some(x => x.userId == userInfo.tacticusUserId)) {
+    const { user, isLoaded, isSignedIn } = useUser();
+    const userDataQuery = useConvexUserDataQuery();
+    if (!isLoaded) return 'Loading login...';
+    if (!isSignedIn) return 'Must be signed in to use this page';
+    if (!user.username) return 'Must set a username to use this page';
+    if (userDataQuery.isError) return 'Error when loading data';
+    if (userDataQuery.isPending) return 'Loading data...';
+    const { data } = userDataQuery;
+
+    if (!guildMembers.some(x => x.userId == data.tacticusUserId)) {
         guildMembers.push({
-            userId: userInfo.tacticusUserId,
-            username: userInfo.username,
+            userId: data.tacticusUserId,
+            username: user.username,
             shareToken: '',
             index: -1,
         });

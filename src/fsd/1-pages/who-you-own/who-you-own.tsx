@@ -6,9 +6,10 @@ import { useCallback, useContext, useMemo, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+import { useConvexUserDataQuery } from '@/convex/hooks';
 import { DispatchContext, StoreContext } from 'src/reducers/store.provider';
 
-import { useAuth, UnitType } from '@/fsd/5-shared/model';
+import { UnitType } from '@/fsd/5-shared/model';
 
 import { ICharacter2 } from '@/fsd/4-entities/character';
 import { CharactersService as FsdCharactersService } from '@/fsd/4-entities/character/characters.service';
@@ -40,7 +41,7 @@ export const WhoYouOwn = () => {
     const dispatch = useContext(DispatchContext);
     const navigate = useNavigate();
 
-    const { token: isLoggedIn, shareToken: isRosterShared } = useAuth();
+    const userDataQuery = useConvexUserDataQuery();
 
     const [viewControls, setViewControls] = useState<ICharactersViewControls>({
         filterBy: viewPreferences.wyoFilter,
@@ -148,7 +149,7 @@ export const WhoYouOwn = () => {
             <RosterSnapshotsAssetsProvider>
                 <CharactersViewContext.Provider value={viewPreferences}>
                     <RosterHeader totalValue={totalValue} totalPower={totalPower} filterChanges={setNameFilter}>
-                        {!!isLoggedIn && <ShareRoster isRosterShared={!!isRosterShared} />}
+                        {userDataQuery.data && <ShareRoster isRosterShared={!!userDataQuery.data?.shareToken} />}
                         <TeamGraph units={charactersFiltered} />
                     </RosterHeader>
                     <CharactersViewControls viewControls={viewControls} viewControlsChanges={updatePreferences} />

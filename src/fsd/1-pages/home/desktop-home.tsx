@@ -7,11 +7,11 @@ import { isMobile } from 'react-device-detect';
 import Zoom from 'react-medium-image-zoom';
 import { useNavigate } from 'react-router-dom';
 
+import { useConvexUserDataQuery } from '@/convex/hooks';
 import { PersonalGoalType } from 'src/models/enums';
 import { menuItemById } from 'src/models/menu-items';
 import { StoreContext } from 'src/reducers/store.provider';
 
-import { useAuth } from '@/fsd/5-shared/model';
 import { getImageUrl } from '@/fsd/5-shared/ui';
 import { MiscIcon, UnitShardIcon } from '@/fsd/5-shared/ui/icons';
 
@@ -86,7 +86,7 @@ function LreSection({ nextEvent }: { nextEvent: ILegendaryEventStatic }) {
 export const DesktopHome = () => {
     useBmcWidget();
     const navigate = useNavigate();
-    const { userInfo } = useAuth();
+    const userDataQuery = useConvexUserDataQuery();
     const { goals, dailyRaids } = useContext(StoreContext);
     const nextLeMenuItem = LegendaryEventService.getActiveEvent();
 
@@ -103,7 +103,7 @@ export const DesktopHome = () => {
     const upgradeRankGoals = goals.filter(x => x.type === PersonalGoalType.UpgradeRank).length;
 
     const announcements = () => {
-        if (userInfo.tacticusApiKey) {
+        if (userDataQuery.data?.tacticusApiKey) {
             return <></>;
         }
 

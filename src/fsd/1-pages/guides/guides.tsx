@@ -1,4 +1,5 @@
-﻿import AddIcon from '@mui/icons-material/Add';
+﻿import { useUser } from '@clerk/clerk-react';
+import AddIcon from '@mui/icons-material/Add';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
 import { Badge, Fab, Tab, Tabs } from '@mui/material';
@@ -9,10 +10,11 @@ import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 
 // eslint-disable-next-line import-x/no-internal-modules -- FYI: Ported from `v2` module; doesn't comply with `fsd` structure
+import { useConvexUserDataQuery } from '@/convex/hooks';
+// eslint-disable-next-line import-x/no-internal-modules -- FYI: Ported from `v2` module; doesn't comply with `fsd` structure
 import { StoreContext } from 'src/reducers/store.provider';
 
 import { useQueryState } from '@/fsd/5-shared/lib';
-import { useAuth, UserRole } from '@/fsd/5-shared/model';
 import { LoaderWithText } from '@/fsd/5-shared/ui';
 import { SearchParametersStateContext } from '@/fsd/5-shared/ui/contexts';
 
@@ -60,12 +62,13 @@ const handleViewOriginal = (teamId: number | undefined) => {
 
 export const Guides: React.FC = () => {
     const { characters, mows } = useContext(StoreContext);
-    const { userInfo, isAuthenticated } = useAuth();
+    const { isSignedIn } = useUser();
+    const userDataQuery = useConvexUserDataQuery();
     const [_, setSearchParameters] = useContext(SearchParametersStateContext);
 
     const resolvedMows = useMemo(() => MowsService.resolveAllFromStorage(mows), [mows]);
 
-    const isModerator = [UserRole.admin, UserRole.moderator].includes(userInfo.role);
+    const isModerator = ['admin', 'moderator'].includes(userDataQuery.data?.role ?? '');
     const [openCreateTeamDialog, setOpenCreateTeamDialog] = React.useState(false);
     const [showFilters, setShowFilters] = React.useState(false);
 
@@ -508,7 +511,7 @@ export const Guides: React.FC = () => {
         <div>
             <div className="flex-box gap10">
                 <Fab
-                    disabled={!isAuthenticated}
+                    disabled={!isSignedIn}
                     variant="extended"
                     size="small"
                     color="primary"
@@ -557,8 +560,8 @@ export const Guides: React.FC = () => {
                 scrollButtons="auto"
                 aria-label="scrollable auto tabs example">
                 <Tab label="All" />
-                <Tab label="Honored" disabled={!isAuthenticated} />
-                <Tab label="My Teams" disabled={!isAuthenticated} />
+                <Tab label="Honored" disabled={!isSignedIn} />
+                <Tab label="My Teams" disabled={!isSignedIn} />
                 {isModerator && <Tab label="Pending" />}
                 {isModerator && <Tab label="Rejected" />}
             </Tabs>

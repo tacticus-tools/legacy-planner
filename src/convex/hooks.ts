@@ -29,29 +29,24 @@ Cheatsheet of important terms:
   - `isSuccess` / `status === 'success'` - The mutation was successful and mutation data is available
 */
 
-// This is just a convenience function to wrap the setup when we want data
 export const useConvexUserDataQuery = () => useQuery(convexQuery(api.legacy_data.getLegacyData));
 
-/*
-This is another convenience function for updating the settings.
-
-The API is currently written as an `upsert` endpoint. This requires that the full settings object be provided.
-To make this easier for code that only wants to update specific fields, I've wrapped the mutation code
-to allow for patching specific fields.
-*/
 type MutationDataArgument = Parameters<typeof useConvexMutation<typeof api.legacy_data.upsertLegacyData>>[0]['_args'];
 export const useConvexUserDataMutation = () => {
     const query = useConvexUserDataQuery();
     const mutation = useMutation({
         mutationFn: useConvexMutation(api.legacy_data.upsertLegacyData),
+        onSuccess: () => {
+            enqueueSnackbar('Updated settings', { variant: 'success' });
+        },
         onError: error => {
             console.error(error);
             enqueueSnackbar(`Failed to update settings: ${error.message}`, { variant: 'error' });
         },
     });
-    return (patch: Partial<MutationDataArgument>) => {
+    return (patch: MutationDataArgument) => {
         if (query.isError) throw new Error(`Failure to load original settings: ${query.error.message}`);
         if (query.isPending) throw new Error('Must complete loading original settings before updating them');
-        return mutation.mutate({ ...query.data, ...patch });
+        return mutation.mutate(patch);
     };
 };

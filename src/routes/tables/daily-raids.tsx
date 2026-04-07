@@ -2,13 +2,12 @@
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 
+import { useConvexUserDataQuery } from '@/convex/hooks';
 import { ICampaignsFilters } from 'src/models/interfaces';
 import { DispatchContext, StoreContext } from 'src/reducers/store.provider';
 import { RaidsHeader } from 'src/routes/tables/raids-header';
 import { RaidsPlan } from 'src/routes/tables/raids-plan';
 import { TodayRaids } from 'src/routes/tables/today-raids';
-
-import { useAuth } from '@/fsd/5-shared/model';
 
 import { CharactersService } from '@/fsd/4-entities/character';
 import { MowsService } from '@/fsd/4-entities/mow';
@@ -40,7 +39,7 @@ function addShardsToUpgrades(
 
 export const DailyRaids = () => {
     const dispatch = useContext(DispatchContext);
-    const { userInfo } = useAuth();
+    const userDataQuery = useConvexUserDataQuery();
     const { syncWithTacticus } = useSyncWithTacticus();
     const {
         dailyRaids,
@@ -65,7 +64,7 @@ export const DailyRaids = () => {
         return GoalsService.prepareGoals(goals, units, true);
     }, [goals, units]);
 
-    const hasSync = !!userInfo.tacticusApiKey;
+    const hasSync = !!userDataQuery.data?.tacticusApiKey;
 
     const location = useLocation();
     const [searchParams] = useSearchParams();
