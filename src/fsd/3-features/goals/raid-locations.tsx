@@ -2,16 +2,16 @@ import React, { useMemo, useState, useCallback, memo } from 'react';
 
 import { ButtonPill } from '@/fsd/5-shared/ui';
 
-import { ICampaignBattleComposed } from '@/fsd/4-entities/campaign/@x/upgrade';
-import { ChipCampaignLocation } from '@/fsd/4-entities/campaign/chip-campaign-location';
+import { ChipCampaignLocation, ICampaignBattleComposed } from '@/fsd/4-entities/campaign';
 
 interface Props {
     locations: ICampaignBattleComposed[];
     maxLocations?: number;
     compactRaidLocations?: boolean;
+    clickable?: boolean;
 }
 
-const Component: React.FC<Props> = ({ locations, maxLocations, compactRaidLocations = true }) => {
+const Component: React.FC<Props> = ({ locations, maxLocations, compactRaidLocations = true, clickable = true }) => {
     const [expanded, setExpanded] = useState(false);
 
     const effectiveMaxLocations = useMemo(() => {
@@ -43,13 +43,15 @@ const Component: React.FC<Props> = ({ locations, maxLocations, compactRaidLocati
     const collapse = useCallback(() => setExpanded(false), []);
 
     return (
-        <div className="text-muted-fg flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+        <div
+            className={`flex gap-y-1 text-xs text-inherit ${compactRaidLocations ? 'flex-wrap items-center gap-x-2' : 'flex-col'}`}>
             {visibleLocationList.map(loc => (
                 <ChipCampaignLocation
                     key={loc.id}
                     location={loc}
                     unlocked={loc.isUnlocked ?? false}
                     compact={compactRaidLocations}
+                    clickable={clickable}
                 />
             ))}
 
@@ -72,6 +74,7 @@ export const RaidLocations = memo(Component, (previous, next) => {
     return (
         previous.maxLocations === next.maxLocations &&
         previous.locations === next.locations &&
-        previous.compactRaidLocations === next.compactRaidLocations
+        previous.compactRaidLocations === next.compactRaidLocations &&
+        previous.clickable === next.clickable
     );
 });
