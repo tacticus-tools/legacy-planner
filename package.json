@@ -125,6 +125,7 @@
         "format": "prettier . --write",
         "format-ci": "prettier . --check",
         "knip": "knip",
+        "sync:convex-api": "cd ~/tp2-reset && bunx convex-helpers ts-api-spec --include-internal --output-file \"$OLDPWD/src/convex/convex-api.ts\"",
         "spellcheck": "cspell .",
         "postinstall": "patch-package --error-on-fail"
     },

@@ -30,10 +30,9 @@ Cheatsheet of important terms:
 */
 
 export const useConvexUserDataQuery = () => useQuery(convexQuery(api.legacy_data.getLegacyData));
+export const useConvexTacticusDataQuery = () => useQuery(convexQuery(api.tacticus.getPlayerData));
 
-type MutationDataArgument = Parameters<typeof useConvexMutation<typeof api.legacy_data.upsertLegacyData>>[0]['_args'];
 export const useConvexUserDataMutation = () => {
-    const query = useConvexUserDataQuery();
     const mutation = useMutation({
         mutationFn: useConvexMutation(api.legacy_data.upsertLegacyData),
         onSuccess: () => {
@@ -44,9 +43,16 @@ export const useConvexUserDataMutation = () => {
             enqueueSnackbar(`Failed to update settings: ${error.message}`, { variant: 'error' });
         },
     });
-    return (patch: MutationDataArgument) => {
-        if (query.isError) throw new Error(`Failure to load original settings: ${query.error.message}`);
-        if (query.isPending) throw new Error('Must complete loading original settings before updating them');
-        return mutation.mutate(patch);
-    };
+    return mutation.mutate;
+};
+
+export const useConvexTacticusSyncMutation = () => {
+    const mutation = useMutation({
+        mutationFn: useConvexMutation(api.tacticus.syncPlayer),
+        onError: error => {
+            console.error(error);
+            enqueueSnackbar(`Failed to sync Tacticus data: ${error.message}`, { variant: 'error' });
+        },
+    });
+    return () => mutation.mutate({});
 };
